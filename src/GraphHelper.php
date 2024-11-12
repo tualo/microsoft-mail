@@ -10,7 +10,8 @@ use Microsoft\Graph\Generated\Users\Item\UserItemRequestBuilderGetRequestConfigu
 use Microsoft\Graph\GraphRequestAdapter;
 use Microsoft\Graph\GraphServiceClient;
 use Microsoft\Kiota\Abstractions\Authentication\BaseBearerTokenAuthenticationProvider;
-use DeviceCodeTokenProvider;
+use Tualo\Office\MicrosoftMail\DeviceCodeTokenProvider;
+use Tualo\Office\Basic\TualoApplication as App;
 
 // require_once 'DeviceCodeTokenProvider.php';
 

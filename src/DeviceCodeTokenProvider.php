@@ -21,6 +21,7 @@ class DeviceCodeTokenProvider implements AccessTokenProvider {
         $this->clientId = $clientId;
         $this->tenantId = $tenantId;
         $this->scopes = $scopes;
+        
         $this->allowedHostsValidator = new AllowedHostsValidator();
         $this->allowedHostsValidator->setAllowedHosts([
             "graph.microsoft.com",
@@ -29,6 +30,8 @@ class DeviceCodeTokenProvider implements AccessTokenProvider {
             "graph.microsoft.de",
             "microsoftgraph.chinacloudapi.cn"
         ]);
+        
+        
         $this->tokenClient = new Client();
     }
 

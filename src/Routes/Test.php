@@ -7,7 +7,7 @@ use Tualo\Office\Basic\TualoApplication as App;
 use Tualo\Office\Basic\Route as BasicRoute;
 use Tualo\Office\Basic\IRoute;
 use Tualo\Office\DS\DSModel;
-use Tualo\Office\Mail\GraphHelper;
+use Tualo\Office\MicrosoftMail\GraphHelper;
 
 
 
@@ -95,10 +95,12 @@ class Test implements IRoute
         BasicRoute::add('/microsoft-mail/test', function ($matches) {
             try{
                 
-
                 initializeGraph();
-                listInbox();
+                displayAccessToken();
+                echo time(); exit();
 
+                /*
+*/
 
 
 
