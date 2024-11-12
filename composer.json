@@ -1,0 +1,23 @@
+{
+    "name": "tualo/microsoft-mail",
+    "description": "tualo - microsoft-mail",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Thomas Hoffmann",
+            "email": "thomas.hoffmann@tualo.de"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Tualo\\Office\\MicrosoftMail\\": "src/"
+        },
+        "files": ["src/functions.php"]
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "microsoft/microsoft-graph": "*",
+        "vlucas/phpdotenv": "*"
+    }
+}
