@@ -17,7 +17,7 @@
     },
     "minimum-stability": "dev",
     "require": {
-        "microsoft/microsoft-graph": "*",
+        "microsoft/microsoft-graph": "^2.18.0",
         "vlucas/phpdotenv": "*"
     }
 }
