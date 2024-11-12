@@ -1,2 +1,2 @@
 <?php
-require_once "Routing/Test.php";
+require_once "Routes/Test.php";

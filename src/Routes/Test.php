@@ -1,6 +1,6 @@
 <?php
 
-namespace Tualo\Office\Mail\Routes;
+namespace Tualo\Office\MicrosoftMail\Routes;
 
 use Tualo\Office\Mail\OutgoingMail;
 use Tualo\Office\Basic\TualoApplication as App;
