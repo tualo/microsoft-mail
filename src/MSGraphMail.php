@@ -13,6 +13,9 @@ use Tualo\Office\MicrosoftMail\API;
 
 class MSGraphMail {
     public static function get(): MSGraphMail{
+        GraphHelper::initializeGraphForUserAuth();
+        $config = json_decode(API::env('primary') ,true);
+        GraphHelper::setAccessToken( $config['access_token'] );
         return new MSGraphMail();
     }
 
@@ -51,6 +54,7 @@ class MSGraphMail {
     public string $AltBody='';
     public array $recipients=[];
     public array $attachments=[];
+    public string $ErrorInfo='';
     
 
     public function send(){
@@ -79,6 +83,7 @@ class MSGraphMail {
 
             );
         }
+        return true;
     }
 
 
