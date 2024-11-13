@@ -21,7 +21,10 @@ Ext.define('Tualo.MicrosoftMail.lazy.controller.Setup', {
 
         }else{
             if (data.error==="No access token"){
-            setTimeout(me.getDeviceToken.bind(me),2000)
+                setTimeout(me.getDeviceToken.bind(me),2000)
+            }
+            if (data.error==="no setup found!"){
+                setTimeout(me.getDeviceToken.bind(me),10000)
             }
         }
     },
