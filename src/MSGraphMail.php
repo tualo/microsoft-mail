@@ -20,20 +20,20 @@ class MSGraphMail {
     }
 
 
-    public function addBCC(string $email, string $name){
+    public function addBCC(string $email, string $name=""){
         return true;
     }
 
-    public function setFrom(string $email, string $name){
+    public function setFrom(string $email, string $name=""){
         return true;
     }
 
-    public function addAddress(string $email, string $name){
+    public function addAddress(string $email, string $name=""){
         $this->recipients[] = ['email'=>$email,'name'=>$name];
         return true;
     }
 
-    public function addAttachment(string $path, string $name){
+    public function addAttachment(string $path, string $name=""){
         $this->attachments[] = [
             'path'=>$path,'name'=>$name,'content'=>file_get_contents($path),'contentType'=>mime_content_type($path)];
         return true;
@@ -52,9 +52,12 @@ class MSGraphMail {
     public string $Subject='';
     public string $Body='';
     public string $AltBody='';
-    public array $recipients=[];
-    public array $attachments=[];
     public string $ErrorInfo='';
+
+
+
+    private array $recipients=[];
+    private array $attachments=[];
     
 
     public function send(){

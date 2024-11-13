@@ -124,7 +124,7 @@ class GraphHelper
     ): void {
 
         try {
-            self::refreashToken();
+            self::refreshToken();
             $requestBody = new SendMailPostRequestBody();
             $message = new Message();
             $message->setSubject($subject);
@@ -183,7 +183,7 @@ class GraphHelper
         }
     }
 
-    public static function refreashToken(): void
+    public static function refreshToken(): void
     {
         try {
             $db = App::get('session')->getDB();

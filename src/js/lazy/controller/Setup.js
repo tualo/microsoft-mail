@@ -20,10 +20,14 @@ Ext.define('Tualo.MicrosoftMail.lazy.controller.Setup', {
             me.getViewModel().set('mail',data.data.mail )
 
         }else{
-            if (data.error==="No access token"){
+            if (data.error=="Lifetime validation failed, the token is expired."){
                 setTimeout(me.getDeviceToken.bind(me),2000)
             }
-            if (data.error==="no setup found!"){
+
+            if (data.error=="No access token"){
+                setTimeout(me.getDeviceToken.bind(me),2000)
+            }
+            if (data.error=="no setup found!"){
                 setTimeout(me.getDeviceToken.bind(me),10000)
             }
         }
