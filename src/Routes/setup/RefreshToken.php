@@ -25,7 +25,7 @@ class RefreshToken implements IRoute
                 }
 
                 GraphHelper::initializeGraphForUserAuth();
-                $list = $db->direct('select * from msgraph_environments where expires + interval - 3800 second < now()');
+                $list = $db->direct('select * from msgraph_environments where expires + interval - 600 second < now()');
                 foreach ($list as $item) {
                     $config = json_decode($item['val'], true);
                     if (isset($config['refresh_token'])) {
