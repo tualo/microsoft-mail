@@ -55,6 +55,9 @@ class API
             try {
                 if (!is_null($db)) {
                     $data = $db->direct('select id,val from msgraph_environments');
+                    if (count($data)==0) {
+                        throw new \Exception('no setup');
+                    }
                     foreach ($data as $d) {
                         self::$ENV[$d['id']] = $d['val'];
                     }
