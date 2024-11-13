@@ -64,18 +64,21 @@ class MSGraphMail {
             $html = nl2br($this->Body);
         }
         GraphHelper::initializeGraphForUserAuth();
-        GraphHelper::sendMail(
-            $this->Subject, 
+        for($i=0;$i<count($this->recipients);$i++){
 
-            $alt, 
-            $html,
+            GraphHelper::sendMail(
+                $this->Subject, 
 
-            $this->recipients[0]['email'],
-            
-            $this->attachments
-            
+                $alt, 
+                $html,
 
-        );
+                $this->recipients[$i]['email'],
+                
+                $this->attachments
+                
+
+            );
+        }
     }
 
 
