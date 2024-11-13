@@ -58,8 +58,11 @@ class API
                     foreach ($data as $d) {
                         self::$ENV[$d['id']] = $d['val'];
                     }
+                }else{
+                    throw new \Exception('Database not found!');
                 }
             } catch (\Exception $e) {
+                throw new \Exception('no setup found!');
             }
         }
         return self::$ENV;
