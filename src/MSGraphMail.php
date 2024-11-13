@@ -70,7 +70,7 @@ class MSGraphMail {
             $alt, 
             $html,
 
-            $this->recipients,
+            $this->recipients[0]['email'],
             
             $this->attachments
             
