@@ -33,20 +33,30 @@ class GraphHelper
 {
     private static string $clientId = '';
     private static string $tenantId = '';
+    private static string $accessToken = '';
     private static string $graphUserScopes = '';
     private static DeviceCodeTokenProvider $tokenProvider;
     private static GraphServiceClient $userClient;
 
-    public static function initializeGraphForUserAuth(): void
+    // SingleValueExtendedProperties
+
+    public static function initializeGraphForUserAuth(string $accessToken = ""): void
     {
-        GraphHelper::$clientId = App::configuration('microsoft-mail', 'clientId', "");
-        GraphHelper::$tenantId = App::configuration('microsoft-mail', 'tenantId', "");
+        $db = App::get('session')->getDB();
+        $clientId = $db->singleValue('select val from  msgraph_setup where id = "clientId"', [], 'val');
+        $tenantId = $db->singleValue('select val from  msgraph_setup where id = "tenantId"', [], 'val');
+        // print_r([$clientId, $tenantId]);
+        GraphHelper::$clientId = App::configuration('microsoft-mail', 'clientId', $clientId);
+        GraphHelper::$tenantId = App::configuration('microsoft-mail', 'tenantId', $tenantId);
         GraphHelper::$graphUserScopes = 'offline_access user.read mail.read mail.send';
         GraphHelper::$tokenProvider = new DeviceCodeTokenProvider(
             GraphHelper::$clientId,
             GraphHelper::$tenantId,
-            GraphHelper::$graphUserScopes
+            GraphHelper::$graphUserScopes,
+            $accessToken
         );
+
+        self::$accessToken = $accessToken;
         $authProvider = new BaseBearerTokenAuthenticationProvider(GraphHelper::$tokenProvider);
         $adapter = new GraphRequestAdapter($authProvider);
         GraphHelper::$userClient = GraphServiceClient::createWithRequestAdapter($adapter);
@@ -83,17 +93,22 @@ class GraphHelper
     }
 
 
-    public static function getUser(): User
+    public static function getUser(): User|null
     {
+        GraphHelper::initializeGraphForUserAuth(self::$accessToken);
+        GraphHelper::refreshToken();
         try {
             $configuration = new UserItemRequestBuilderGetRequestConfiguration();
             $configuration->queryParameters = new UserItemRequestBuilderGetQueryParameters();
             $configuration->queryParameters->select = ['displayName', 'mail', 'userPrincipalName'];
             $result = GraphHelper::$userClient->me()->get($configuration)->wait();
             return $result;
+        } catch (ApiException $ex) {
+            echo $ex->getMessage();
         } catch (ODataError $e) {
             throw  new Exception($e->getError()->getMessage());
         }
+
         return null;
     }
 
@@ -120,7 +135,8 @@ class GraphHelper
         string $bodyText,
         string $bodyHtml,
         string $recipient,
-        array $attachments = []
+        array $attachments = [],
+        string $listUnsubscribePost = ""
     ): void {
 
         try {
@@ -174,12 +190,24 @@ class GraphHelper
 
             $message->setToRecipients($toRecipientsArray);
 
+
+            // Füge den List-Unsubscribe-Post-Header hinzu, falls angegeben
+            if ($listUnsubscribePost !== null) {
+                $extendedProperty = new Models\SingleValueLegacyExtendedProperty();
+                $extendedProperty->setId("String 0x1045"); // Standard-ID für benutzerdefinierte Header
+                $extendedProperty->setValue($listUnsubscribePost);
+                $message->setSingleValueExtendedProperties([$extendedProperty]);
+            }
+
             $requestBody->setMessage($message);
             GraphHelper::$userClient->me()->sendMail()->post($requestBody)->wait();
         } catch (ApiException $ex) {
             echo $ex->getMessage();
         } catch (ODataError $e) {
+            echo $e->getError()->getMessage();
             throw  new Exception($e->getError()->getMessage());
+        } catch (Exception $ex) {
+            echo $ex->getMessage();
         }
     }
 
@@ -213,7 +241,7 @@ class GraphHelper
                     $db->direct($sql, [
                         'object' => json_encode($tokenRespone)
                     ]);
-                    GraphHelper::setAccessToken( $tokenRespone['access_token'] );
+                    GraphHelper::setAccessToken($tokenRespone['access_token']);
                 }
             }
         } catch (ODataError $e) {

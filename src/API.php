@@ -46,26 +46,33 @@ class API
         return $data;
     }
 
-    
+
 
     public static function getEnvironment(): array
     {
         if (is_null(self::$ENV)) {
             $db = TualoApplication::get('session')->getDB();
             try {
+
+                $tenantId = $db->singleValue('select val from  msgraph_setup where id = "tenantId"', [], 'val');
+                $tenantId = App::configuration('microsoft-mail', 'tenantId', $tenantId);
+                if (!$tenantId) {
+                    throw new \Exception('no setup found!');
+                }
+
                 if (!is_null($db)) {
                     $data = $db->direct('select id,val from msgraph_environments');
-                    if (count($data)==0) {
+                    if (count($data) == 0) {
                         throw new \Exception('no setup');
                     }
                     foreach ($data as $d) {
                         self::$ENV[$d['id']] = $d['val'];
                     }
-                }else{
+                } else {
                     throw new \Exception('Database not found!');
                 }
             } catch (\Exception $e) {
-                throw new \Exception('no setup found!');
+                throw new \Exception($e->getMessage());
             }
         }
         return self::$ENV;
@@ -95,13 +102,18 @@ class API
         return $client;
     }
 
-    public static function authorize() {
+    public static function authorize()
+    {
         self::$ENV['url'] = "https://login.microsoftonline.com";
-        self::$ENV['tenant'] = App::configuration('microsoft-mail', 'tenantId', "");
-        self::$ENV['client_id'] = App::configuration('microsoft-mail', 'clientId', "");
+
+        $db = App::get('session')->getDB();
+        $clientId = $db->singleValue('select val from  msgraph_setup where id = "clientId"', [], 'val');
+        $tenantId = $db->singleValue('select val from  msgraph_setup where id = "tenantId"', [], 'val');
+        self::$ENV['tenant'] = App::configuration('microsoft-mail', 'tenantId', $tenantId);
+        self::$ENV['client_id'] = App::configuration('microsoft-mail', 'clientId', $clientId);
         $client = self::getClient();
         //echo self::replacer('/{{tenant}}/oauth2/v2.0/authorize?={{client_id}}&response_type=code'); exit();
-        $response = $client->get(self::replacer('/{{tenant}}/oauth2/v2.0/authorize'),[
+        $response = $client->get(self::replacer('/{{tenant}}/oauth2/v2.0/authorize'), [
             'query' => [
                 'client_id' => self::$ENV['client_id'],
                 'response_type' => 'code',
@@ -116,7 +128,7 @@ class API
         $reason = $response->getReasonPhrase(); // OK
 
         if ($code != 200) {
-            
+
             throw new \Exception($reason);
         }
         echo $response->getBody()->getContents();
@@ -133,16 +145,16 @@ class API
 
 
 
-    public static function getDateRange(int $start,int $stop,string $base_currency,array $currencies,string $accuracy='day')
+    public static function getDateRange(int $start, int $stop, string $base_currency, array $currencies, string $accuracy = 'day')
     {
         $client = self::getClient();
         $response = $client->get('/v3/range', [
             'query' => [
-                'datetime_start' => date('Y-m-d\TH:i:s\Z',$start),
-                'datetime_end' => date('Y-m-d\TH:i:s\Z',$stop),
+                'datetime_start' => date('Y-m-d\TH:i:s\Z', $start),
+                'datetime_end' => date('Y-m-d\TH:i:s\Z', $stop),
                 'accuracy' => $accuracy,
                 'base_currency' => $base_currency,
-                'currencies' => implode(',',$currencies)
+                'currencies' => implode(',', $currencies)
             ]
         ]);
         $code = $response->getStatusCode(); // 200
@@ -155,16 +167,16 @@ class API
         return $result;
     }
 
-    
-    public static function getDate(int $date,string $base_currency,array $currencies,string $accuracy='day')
+
+    public static function getDate(int $date, string $base_currency, array $currencies, string $accuracy = 'day')
     {
         $client = self::getClient();
         $response = $client->get('/v3/historical', [
             'query' => [
-                'date' => date('Y-m-d\TH:i:s\Z',$date),
+                'date' => date('Y-m-d\TH:i:s\Z', $date),
                 'accuracy' => $accuracy,
                 'base_currency' => $base_currency,
-                'currencies' => implode(',',$currencies)
+                'currencies' => implode(',', $currencies)
             ]
         ]);
         $code = $response->getStatusCode(); // 200

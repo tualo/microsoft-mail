@@ -52,11 +52,22 @@ Ext.define('Tualo.MicrosoftMail.lazy.Setup', {
                 {
                     xtype: 'component',
                     cls: 'lds-container-compact',
-                    bind:{
+                    bind: {
                         html: '{devicetokenhtml}'
                     }
                 }
-            ]
+            ],
+            dockedItems: [{
+                xtype: 'toolbar',
+                dock: 'bottom',
+                items: [
+                    {
+                        xtype: 'button', text: 'Prüfen', bind: {
+                            handler: 'checkToken'
+                        }
+                    }
+                ]
+            }],
         },
         {
             hidden: true,
@@ -70,7 +81,7 @@ Ext.define('Tualo.MicrosoftMail.lazy.Setup', {
                 {
                     xtype: 'component',
                     cls: 'lds-container-compact',
-                    bind:{
+                    bind: {
                         html: '{userhtml}'
                     }
                 }
@@ -79,11 +90,50 @@ Ext.define('Tualo.MicrosoftMail.lazy.Setup', {
                 xtype: 'toolbar',
                 dock: 'bottom',
                 items: [
-                    { xtype: 'button', text: 'Erneuern',bind:{
-                        handler: 'getDeviceToken'
-                    } }
+                    {
+                        xtype: 'button', text: 'Erneuern', bind: {
+                            handler: 'getDeviceToken'
+                        }
+                    }
                 ]
             }]
+        },
+        {
+            hidden: true,
+            xtype: 'panel',
+            itemId: 'apiconfig',
+            layout: {
+                type: 'vbox',
+                align: 'center'
+            },
+            items: [
+                {
+                    xtype: 'form',
+                    items: [
+                        {
+                            xtype: 'textfield',
+                            fieldLabel: 'Client ID',
+                            bind: {
+                                value: '{client_id}'
+                            }
+                        },
+                        {
+                            xtype: 'textfield',
+                            fieldLabel: 'Tenant ID',
+                            bind: {
+                                value: '{tenant_id}'
+                            }
+                        },
+                        {
+                            xtype: 'button',
+                            text: 'Speichern',
+                            bind: {
+                                handler: 'saveConfig'
+                            }
+                        }
+                    ]
+                }
+            ]
         }
     ],
 

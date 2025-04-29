@@ -19,26 +19,34 @@ class UserRoute implements IRoute
         BasicRoute::add('/microsoft-mail/setup/user', function ($matches) {
             try {
 
-                GraphHelper::initializeGraphForUserAuth();
-                if (is_null(API::env('primary'))){
+                $config = json_decode(API::env('primary'), true);
+                App::result('cnf',  $config);
+                App::result('step',  __LINE__);
+                App::result('cnfy',  $config['access_token']);
+
+                GraphHelper::initializeGraphForUserAuth($config['access_token']);
+                App::result('step',  __LINE__);
+                if (is_null(API::env('primary'))) {
                     throw new \Exception('config environment not found');
                 }
-                $config = json_decode(API::env('primary') ,true);
-                App::result('cnf',  $config );
-                GraphHelper::setAccessToken( $config['access_token'] );
+                App::result('step',  __LINE__);
+                GraphHelper::setAccessToken($config['access_token']);
 
+                App::result('step',  __LINE__);
                 $user = GraphHelper::getUser();
- 
-                App::result('data', [
-                    'mail' => $user->getMail(),
-                    'displayName' => $user->getDisplayName(),
-                    'principal' => $user->getUserPrincipalName()
-                ]
+
+                App::result('step',  __LINE__);
+                App::result(
+                    'data',
+                    [
+                        'mail' => $user->getMail(),
+                        'displayName' => $user->getDisplayName(),
+                        'principal' => $user->getUserPrincipalName()
+                    ]
                 );
 
+                App::result('step',  __LINE__);
                 App::result('success',  true);
-                
-                
             } catch (\Exception $e) {
                 App::result('error', $e->getMessage());
             }

@@ -9,6 +9,7 @@ require_once "Routes/setup/CreateAccessToken.php";
 require_once "Routes/setup/RefreshToken.php";
 require_once "Routes/setup/DeviceCode.php";
 require_once "Routes/setup/TestSelfMail.php";
+require_once "Routes/setup/APIConfig.php";
 
 require_once "Checks/Tables.php";
 // require_once "Checks/StoredProcedures.php";
