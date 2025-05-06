@@ -56,6 +56,7 @@ class API
 
                 $tenantId = $db->singleValue('select val from  msgraph_setup where id = "tenantId"', [], 'val');
                 $tenantId = App::configuration('microsoft-mail', 'tenantId', $tenantId);
+                $clientSecret = $db->singleValue('select val from  msgraph_setup where id = "clientSecret"', [], 'val');
                 if (!$tenantId) {
                     throw new \Exception('no setup found!');
                 }
@@ -63,7 +64,9 @@ class API
                 if (!is_null($db)) {
                     $data = $db->direct('select id,val from msgraph_environments');
                     if (count($data) == 0) {
-                        throw new \Exception('no setup');
+                        if (!$clientSecret) {
+                            throw new \Exception('no setup');
+                        }
                     }
                     foreach ($data as $d) {
                         self::$ENV[$d['id']] = $d['val'];

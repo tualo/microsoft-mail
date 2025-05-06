@@ -27,6 +27,8 @@ use GuzzleHttp\Psr7\Stream;
 use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 
 // require_once 'DeviceCodeTokenProvider.php';
+use Microsoft\Kiota\Authentication\Oauth\ClientCredentialContext;
+use Microsoft\Graph\Core\Authentication\GraphPhpLeagueAuthenticationProvider;
 
 
 class GraphHelper
@@ -34,6 +36,7 @@ class GraphHelper
     private static string $clientId = '';
     private static string $tenantId = '';
     private static string $accessToken = '';
+    private static string $clientSecret = '';
     private static string $graphUserScopes = '';
     private static DeviceCodeTokenProvider $tokenProvider;
     private static GraphServiceClient $userClient;
@@ -45,21 +48,35 @@ class GraphHelper
         $db = App::get('session')->getDB();
         $clientId = $db->singleValue('select val from  msgraph_setup where id = "clientId"', [], 'val');
         $tenantId = $db->singleValue('select val from  msgraph_setup where id = "tenantId"', [], 'val');
+        $clientSecret = $db->singleValue('select val from  msgraph_setup where id = "clientSecret"', [], 'val');
+
         // print_r([$clientId, $tenantId]);
         GraphHelper::$clientId = App::configuration('microsoft-mail', 'clientId', $clientId);
         GraphHelper::$tenantId = App::configuration('microsoft-mail', 'tenantId', $tenantId);
         GraphHelper::$graphUserScopes = 'offline_access user.read mail.read mail.send';
-        GraphHelper::$tokenProvider = new DeviceCodeTokenProvider(
-            GraphHelper::$clientId,
-            GraphHelper::$tenantId,
-            GraphHelper::$graphUserScopes,
-            $accessToken
-        );
 
-        self::$accessToken = $accessToken;
-        $authProvider = new BaseBearerTokenAuthenticationProvider(GraphHelper::$tokenProvider);
-        $adapter = new GraphRequestAdapter($authProvider);
-        GraphHelper::$userClient = GraphServiceClient::createWithRequestAdapter($adapter);
+
+        if ($clientSecret === false) {
+            GraphHelper::$tokenProvider = new DeviceCodeTokenProvider(
+                GraphHelper::$clientId,
+                GraphHelper::$tenantId,
+                GraphHelper::$graphUserScopes,
+                $accessToken
+            );
+
+            self::$accessToken = $accessToken;
+            $authProvider = new BaseBearerTokenAuthenticationProvider(GraphHelper::$tokenProvider);
+            $adapter = new GraphRequestAdapter($authProvider);
+            GraphHelper::$userClient = GraphServiceClient::createWithRequestAdapter($adapter);
+        } else {
+            GraphHelper::$clientSecret = $clientSecret;
+            $tokenRequestContext = new ClientCredentialContext(
+                GraphHelper::$clientId,
+                GraphHelper::$tenantId,
+                GraphHelper::$clientSecret
+            );
+            GraphHelper::$userClient =  new GraphServiceClient($tokenRequestContext);
+        }
     }
 
     public static function getDeviceLogin(): mixed
