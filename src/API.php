@@ -64,9 +64,7 @@ class API
                 if (!is_null($db)) {
                     $data = $db->direct('select id,val from msgraph_environments');
                     if (count($data) == 0) {
-                        if (!$clientSecret) {
-                            throw new \Exception('no setup');
-                        }
+                        throw new \Exception('no setup');
                     }
                     foreach ($data as $d) {
                         self::$ENV[$d['id']] = $d['val'];
@@ -168,6 +166,42 @@ class API
         }
         $result = json_decode($response->getBody()->getContents(), true);
         return $result;
+    }
+
+
+    public static function get_token($code = null)
+    {
+        try {
+            $db = TualoApplication::get('session')->getDB();
+            $clientId = $db->singleValue('select val from  msgraph_setup where id = "clientId"', [], 'val');
+            $tenantId = $db->singleValue('select val from  msgraph_setup where id = "tenantId"', [], 'val');
+            $clientSecret = $db->singleValue('select val from  msgraph_setup where id = "clientSecret"', [], 'val');
+            $url_token = 'https://login.microsoftonline.com/' . $tenantId . "/oauth2/v2.0/token";
+            $client = self::getClient();
+            $scopes = [
+                'Mail.ReadWrite',
+                'Mail.Send',
+                'User.Read.All'
+            ];
+            $request = $client->post($url_token, array(
+                "form_params" => array(
+                    "client_id"     => $clientId,
+                    "client_secret" => $clientSecret,
+                    "redirect_uri"  => "",
+                    "scope"         => implode(" ", $scopes),
+                    "grant_type"    => "authorization_code",
+                    "code"          => $code,
+                ),
+            ))->getBody()->getContents();
+
+            $result        = json_decode($request);
+            $result->valid = true;
+
+            return $result;
+        } catch (\Exception $e) {
+            print_r($e);
+            return false;
+        }
     }
 
 

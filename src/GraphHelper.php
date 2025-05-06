@@ -69,6 +69,8 @@ class GraphHelper
             $adapter = new GraphRequestAdapter($authProvider);
             GraphHelper::$userClient = GraphServiceClient::createWithRequestAdapter($adapter);
         } else {
+            print_r(API::get_token());
+            exit();
             GraphHelper::$clientSecret = $clientSecret;
             $tokenRequestContext = new ClientCredentialContext(
                 GraphHelper::$clientId,
@@ -232,6 +234,12 @@ class GraphHelper
     {
         try {
             $db = App::get('session')->getDB();
+            $clientSecret = $db->singleValue('select val from  msgraph_setup where id = "clientSecret"', [], 'val');
+            if (!$clientSecret) {
+                return;
+            }
+
+
             if (is_null(API::env('primary'))) {
                 throw new \Exception('config environment not found');
             }
