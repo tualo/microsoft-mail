@@ -35,6 +35,10 @@ class UserRoute implements IRoute
                 App::result('step',  __LINE__);
                 $user = GraphHelper::getUser();
 
+                if (!($user instanceof User)) {
+                    App::result('success',  true);
+                    throw new \Exception('user not found');
+                }
                 App::result('step',  __LINE__);
                 App::result(
                     'data',

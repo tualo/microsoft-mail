@@ -38,6 +38,18 @@ class MSGraphMail
         return true;
     }
 
+    public function addAttachmentData(string $path, string $content, string $contentType, string $name = "")
+    {
+        $this->attachments[] = [
+            'path' => $path,
+            'name' => $name,
+            'content' => $content,
+            'contentType' => $contentType
+        ];
+        return true;
+    }
+
+
     public function addAttachment(string $path, string $name = "")
     {
         $this->attachments[] = [

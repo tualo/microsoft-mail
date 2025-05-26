@@ -30,6 +30,10 @@ class RefreshToken implements IRoute
                     $config = json_decode($item['val'], true);
                     if (isset($config['refresh_token'])) {
                         $tokenRespone = GraphHelper::getAccessTokenByRefreshToken($config['refresh_token']);
+                        if (!is_array($tokenRespone)) {
+                            App::result('error', 'no token response');
+                            return;
+                        }
                         $sql = '
                                 insert into msgraph_environments 
                                     (id,val,login,updated,expires) 
