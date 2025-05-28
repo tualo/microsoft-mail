@@ -8,10 +8,11 @@ use Tualo\Office\Basic\IRoute;
 use Tualo\Office\MicrosoftMail\GraphHelper;
 use Microsoft\Graph\Generated\Models\User;
 use Tualo\Office\MicrosoftMail\API;
+use Tualo\Office\Mail\MailInterface;
 
 
 
-class MSGraphMail
+class MSGraphMail implements MailInterface
 {
     public static function get(): MSGraphMail
     {
