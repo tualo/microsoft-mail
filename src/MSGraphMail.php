@@ -69,10 +69,10 @@ class MSGraphMail implements MailInterface
 
     public function isHtml($isHtml)
     {
-        $this->isHtml = $isHtml;
+        $this->_isHtml = $isHtml;
         return true;
     }
-    public bool $isHtml = false;
+    public bool $_isHtml = false;
 
     public string $Subject = '';
     public string $Body = '';
@@ -115,7 +115,7 @@ class MSGraphMail implements MailInterface
     {
         $alt = '';
         $html = '';
-        if ($this->isHtml) {
+        if ($this->_isHtml) {
             $alt = strip_tags($this->Body);
             $html = $this->Body;
         } else {
