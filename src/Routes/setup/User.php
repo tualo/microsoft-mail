@@ -8,7 +8,7 @@ use Tualo\Office\Basic\IRoute;
 use Tualo\Office\MicrosoftMail\GraphHelper;
 use Microsoft\Graph\Generated\Models\User;
 use Tualo\Office\MicrosoftMail\API;
-
+use Tualo\Office\MicrosoftMail\DummyUser;
 
 
 class UserRoute implements IRoute
@@ -35,19 +35,27 @@ class UserRoute implements IRoute
                 App::result('step',  __LINE__);
                 $user = GraphHelper::getUser();
 
-                if (!($user instanceof User)) {
-                    App::result('success',  true);
-                    throw new \Exception('user not found');
+                if ($user instanceof User) {
+                    App::result(
+                        'data',
+                        [
+                            'mail' => $user->getMail(),
+                            'displayName' => $user->getDisplayName(),
+                            'principal' => $user->getUserPrincipalName()
+                        ]
+                    );
+                } else if ($user instanceof DummyUser) {
+                    App::result(
+                        'data',
+                        [
+                            'mail' => 'Dummy User',
+                            'displayName' => 'Dummy User',
+                            'principal' => 'Dummy User',
+                        ]
+                    );
                 }
                 App::result('step',  __LINE__);
-                App::result(
-                    'data',
-                    [
-                        'mail' => $user->getMail(),
-                        'displayName' => $user->getDisplayName(),
-                        'principal' => $user->getUserPrincipalName()
-                    ]
-                );
+
 
                 App::result('step',  __LINE__);
                 App::result('success',  true);

@@ -14,11 +14,15 @@ class CreateAccessToken implements IRoute
     public static function register()
     {
         BasicRoute::add('/microsoft-mail/setup/accesstoken', function ($matches) {
+            echo 1;
             try {
                 $db = App::get('session')->getDB();
 
                 GraphHelper::initializeGraphForUserAuth();
                 $payload = json_decode(@file_get_contents('php://input'), true);
+                if (!isset($payload['device_code'])) {
+                    $payload['device_code'] = '';
+                }
                 $tokenRespone = GraphHelper::getAccessToken($payload['device_code']);
 
 
@@ -44,6 +48,6 @@ class CreateAccessToken implements IRoute
                 App::result('error', $e->getMessage());
             }
             App::contenttype('application/json');
-        }, ['post'], true);
+        }, ['post', 'get'], true);
     }
 }

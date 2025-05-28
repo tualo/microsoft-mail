@@ -11,7 +11,7 @@ use Http\Promise\RejectedPromise;
 use Microsoft\Kiota\Abstractions\Authentication\AccessTokenProvider;
 use Microsoft\Kiota\Abstractions\Authentication\AllowedHostsValidator;
 
-class DeviceCodeTokenProvider implements TokenProvider
+class ClientSecretTokenProvider implements TokenProvider
 {
 
     private string $clientId;
@@ -19,14 +19,17 @@ class DeviceCodeTokenProvider implements TokenProvider
     private string $scopes;
     private AllowedHostsValidator $allowedHostsValidator;
     public string $accessToken;
+    public string $clientSecret;
+
     private Client $tokenClient;
 
 
 
-    public function __construct(string $clientId, string $tenantId, string $scopes, string $accessToken = "")
+    public function __construct(string $clientId, string $clientSecret, string $tenantId, string $scopes, string $accessToken = "")
     {
         $this->clientId = $clientId;
         $this->tenantId = $tenantId;
+        $this->clientSecret = $clientSecret;
         $this->scopes = $scopes;
 
         $this->allowedHostsValidator = new AllowedHostsValidator();
@@ -54,18 +57,6 @@ class DeviceCodeTokenProvider implements TokenProvider
         $this->accessToken = $token;
     }
 
-    public function deviceLogin(): array
-    {
-        $deviceCodeRequestUrl = 'https://login.microsoftonline.com/' . $this->tenantId . '/oauth2/v2.0/devicecode';
-        $deviceCodeResponse = json_decode($this->tokenClient->post($deviceCodeRequestUrl, [
-            'form_params' => [
-                'client_id' => $this->clientId,
-                'scope' => $this->scopes
-            ]
-        ])->getBody()->getContents(), true);
-        return $deviceCodeResponse;
-    }
-
     public function getAccessToken(string $device_code = "")
     {
         $tokenRequestUrl = 'https://login.microsoftonline.com/' . $this->tenantId . '/oauth2/v2.0/token';
@@ -73,8 +64,10 @@ class DeviceCodeTokenProvider implements TokenProvider
         $tokenResponse = $this->tokenClient->post($tokenRequestUrl, [
             'form_params' => [
                 'client_id' => $this->clientId,
-                'grant_type' => 'urn:ietf:params:oauth:grant-type:device_code',
-                'device_code' => $device_code
+                'client_secret' => $this->clientSecret,
+                'scope' => 'https://graph.microsoft.com/.default',
+                'grant_type' => 'client_credentials',
+
             ],
             'http_errors' => false,
             'curl' => [
@@ -90,16 +83,50 @@ class DeviceCodeTokenProvider implements TokenProvider
             if (isset($responseBody->error)) {
                 $error = $responseBody->error;
                 if (strcmp($error, 'authorization_pending') != 0) {
-                    throw new \Exception('Token endpoint returned ' . $error, 100);
-                    /*return '';
                     return new RejectedPromise(
-                    );*/
+                        new \Exception('Token endpoint returned ' . $error, 100)
+                    );
                 }
             }
         }
-        return '';
     }
 
+    public function deviceLogin(): array
+    {
+        return [];
+    }
+
+
+    public function getAllowedHostsValidator(): AllowedHostsValidator
+    {
+        return $this->allowedHostsValidator;
+    }
+
+    /**
+     * Returns a promise that resolves to the access token string.
+     *
+     * @param string $url
+     * @param array $additionalAuthenticationContext
+     * @return Promise
+     */
+    public function getAuthorizationTokenAsync(string $url, array $additionalAuthenticationContext = []): Promise
+    {
+        try {
+            $tokenResponse = $this->getAccessToken();
+            if (is_array($tokenResponse) && isset($tokenResponse['access_token'])) {
+                $this->accessToken = $tokenResponse['access_token'];
+                return new FulfilledPromise($this->accessToken);
+            } elseif ($tokenResponse instanceof Promise) {
+                return $tokenResponse;
+            } else {
+                return new RejectedPromise(
+                    new \Exception('Failed to retrieve access token', 101)
+                );
+            }
+        } catch (\Throwable $e) {
+            return new RejectedPromise($e);
+        }
+    }
 
     public function getAccessTokenByRefreshToken($refresh_token)
     {
@@ -131,40 +158,5 @@ class DeviceCodeTokenProvider implements TokenProvider
                 }
             }
         }
-    }
-
-    public function getAuthorizationTokenAsync(string $url, array $additionalAuthenticationContext = []): Promise
-    {
-        $parsedUrl = parse_url($url);
-        $scheme = $parsedUrl["scheme"] ?? null;
-
-
-        App::result('DeviceCodeTokenProvider',  __LINE__);
-        App::result('DeviceCodeTokenProvider_url',  $url);
-        if ($scheme !== 'https' || !$this->getAllowedHostsValidator()->isUrlHostValid($url)) {
-            return new FulfilledPromise(null);
-        }
-        App::result('DeviceCodeTokenProvider',  __LINE__);
-
-
-        // If we already have a user token, just return it
-        // Tokens are valid for one hour, after that it needs to be refreshed
-        App::result('DeviceCodeTokenProvider',  __LINE__);
-        if (isset($this->accessToken) && ($this->accessToken != '')) {
-
-            return new FulfilledPromise($this->accessToken);
-        } else {
-            App::result('DeviceCodeTokenProvider',  __LINE__);
-            return new RejectedPromise(
-                new \Exception('No access token', 100)
-            );
-            // throw new \Exception('No access token');
-        }
-        App::result('DeviceCodeTokenProvider',  __LINE__);
-    }
-
-    public function getAllowedHostsValidator(): AllowedHostsValidator
-    {
-        return $this->allowedHostsValidator;
     }
 }

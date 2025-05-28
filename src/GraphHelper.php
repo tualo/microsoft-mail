@@ -29,6 +29,7 @@ use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 // require_once 'DeviceCodeTokenProvider.php';
 use Microsoft\Kiota\Authentication\Oauth\ClientCredentialContext;
 use Microsoft\Graph\Core\Authentication\GraphPhpLeagueAuthenticationProvider;
+use Microsoft\Kiota\Abstractions\Authentication\AccessTokenProvider;
 
 
 class GraphHelper
@@ -38,10 +39,12 @@ class GraphHelper
     private static string $accessToken = '';
     private static string $clientSecret = '';
     private static string $graphUserScopes = '';
-    private static DeviceCodeTokenProvider $tokenProvider;
+    private static TokenProvider $tokenProvider;
     private static GraphServiceClient $userClient;
 
     // SingleValueExtendedProperties
+
+
 
     public static function initializeGraphForUserAuth(string $accessToken = ""): void
     {
@@ -69,15 +72,19 @@ class GraphHelper
             $adapter = new GraphRequestAdapter($authProvider);
             GraphHelper::$userClient = GraphServiceClient::createWithRequestAdapter($adapter);
         } else {
-            print_r(API::get_token());
-            exit();
-            GraphHelper::$clientSecret = $clientSecret;
-            $tokenRequestContext = new ClientCredentialContext(
+
+            GraphHelper::$tokenProvider = new ClientSecretTokenProvider(
                 GraphHelper::$clientId,
+                $clientSecret,
                 GraphHelper::$tenantId,
-                GraphHelper::$clientSecret
+                GraphHelper::$graphUserScopes,
+                $accessToken
             );
-            GraphHelper::$userClient =  new GraphServiceClient($tokenRequestContext);
+            self::$accessToken = $accessToken;
+
+            $authProvider = new BaseBearerTokenAuthenticationProvider(GraphHelper::$tokenProvider);
+            $adapter = new GraphRequestAdapter($authProvider);
+            GraphHelper::$userClient = GraphServiceClient::createWithRequestAdapter($adapter);
         }
     }
 
@@ -122,10 +129,14 @@ class GraphHelper
             $configuration->queryParameters->select = ['displayName', 'mail', 'userPrincipalName'];
             $result = GraphHelper::$userClient->me()->get($configuration)->wait();
             return $result;
-        } catch (ApiException $ex) {
-            echo $ex->getMessage();
         } catch (ODataError $e) {
+            if ($e->getError()->getCode() == 'BadRequest') {
+                // This can happen if the user has no mail address set
+                return null;
+            }
             throw  new Exception($e->getError()->getMessage());
+        } catch (ApiException $e) {
+            throw  new Exception($e->getMessage());
         }
 
         return null;
