@@ -22,6 +22,6 @@ class JsLoader implements IRoute
 
                 ]
             );
-        }, ['get'], false);
+        }, ['get'], true);
     }
 }
