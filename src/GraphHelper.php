@@ -20,6 +20,8 @@ use Microsoft\Graph\Generated\Models\Message;
 use Microsoft\Graph\Generated\Models\ItemBody;
 use Microsoft\Graph\Generated\Models\BodyType;
 use Microsoft\Graph\Generated\Models\Recipient;
+
+
 use Microsoft\Graph\Generated\Models\EmailAddress;
 use Microsoft\Graph\Generated\Models\FileAttachment;
 use Microsoft\Kiota\Abstractions\ApiException;
@@ -175,6 +177,14 @@ class GraphHelper
             $message = new Message();
             $message->setSubject($subject);
 
+            $message->setFrom(
+                (new Recipient())
+                    ->setEmailAddress(
+                        (new EmailAddress())
+                            ->setAddress('Noreply-datencheck@muenchen.ihk.de')
+                    )
+            );
+
             if ($bodyText != '') {
                 $messageBody = new ItemBody();
                 $messageBody->setContentType(new BodyType('text'));
@@ -188,6 +198,7 @@ class GraphHelper
                 $messageBody->setContent($bodyHtml);
                 $message->setBody($messageBody);
             }
+
 
 
 
@@ -231,11 +242,11 @@ class GraphHelper
 
             $requestBody->setMessage($message);
             GraphHelper::$userClient->me()->sendMail()->post($requestBody)->wait();
-        } catch (ApiException $ex) {
-            echo $ex->getMessage();
         } catch (ODataError $e) {
             echo $e->getError()->getMessage();
             throw  new Exception($e->getError()->getMessage());
+        } catch (ApiException $ex) {
+            echo $ex->getMessage();
         } catch (Exception $ex) {
             echo $ex->getMessage();
         }
