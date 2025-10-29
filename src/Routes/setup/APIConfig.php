@@ -11,7 +11,7 @@ use Tualo\Office\MicrosoftMail\API;
 
 
 
-class APIConfig implements IRoute
+class APIConfig extends \Tualo\Office\Basic\RouteWrapper
 {
     public static function register()
     {

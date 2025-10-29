@@ -10,13 +10,13 @@ use Tualo\Office\DS\DSModel;
 use Tualo\Office\MicrosoftMail\GraphHelper;
 
 
-class DeviceCode implements IRoute
+class DeviceCode extends \Tualo\Office\Basic\RouteWrapper
 {
 
     public static function register()
     {
         BasicRoute::add('/microsoft-mail/setup/devicelogin', function ($matches) {
-            try{
+            try {
                 GraphHelper::initializeGraphForUserAuth();
 
                 $deviceCodeResponse = GraphHelper::getDeviceLogin();
@@ -26,17 +26,13 @@ class DeviceCode implements IRoute
 
                 App::result('expires_in', $deviceCodeResponse['expires_in']);
                 App::result('interval', $deviceCodeResponse['interval']);
-                
+
                 App::result('message', $deviceCodeResponse['message']);
                 App::result('success', true);
-                
-
-
             } catch (\Exception $e) {
                 echo $e->getMessage();
             }
             App::contenttype('application/json');
-
         }, ['get', 'post'], true);
     }
 }

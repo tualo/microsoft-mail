@@ -9,7 +9,7 @@ use Tualo\Office\MicrosoftMail\GraphHelper;
 
 
 
-class CreateAccessToken implements IRoute
+class CreateAccessToken extends \Tualo\Office\Basic\RouteWrapper
 {
     public static function register()
     {

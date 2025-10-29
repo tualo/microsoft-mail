@@ -11,7 +11,7 @@ use Tualo\Office\MicrosoftMail\API;
 use Tualo\Office\MicrosoftMail\DummyUser;
 
 
-class UserRoute implements IRoute
+class UserRoute extends \Tualo\Office\Basic\RouteWrapper
 {
     public static function register()
     {

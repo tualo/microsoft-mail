@@ -11,7 +11,7 @@ use Tualo\Office\MicrosoftMail\API;
 use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 
 
-class RefreshToken implements IRoute
+class RefreshToken extends \Tualo\Office\Basic\RouteWrapper
 {
     public static function register()
     {
