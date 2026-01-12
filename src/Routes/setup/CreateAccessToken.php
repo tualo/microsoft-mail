@@ -14,7 +14,6 @@ class CreateAccessToken extends \Tualo\Office\Basic\RouteWrapper
     public static function register()
     {
         BasicRoute::add('/microsoft-mail/setup/accesstoken', function ($matches) {
-            echo 1;
             try {
                 $db = App::get('session')->getDB();
 
