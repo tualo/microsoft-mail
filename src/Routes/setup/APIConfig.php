@@ -5,7 +5,6 @@ namespace Tualo\Office\MicrosoftMail\Routes\Setup;
 use Tualo\Office\Basic\TualoApplication as App;
 use Tualo\Office\Basic\Route as BasicRoute;
 use Tualo\Office\Basic\IRoute;
-use Tualo\Office\MicrosoftMail\GraphHelper;
 use Microsoft\Graph\Generated\Models\User;
 use Tualo\Office\MicrosoftMail\API;
 

@@ -5,10 +5,19 @@ namespace Tualo\Office\MicrosoftMail;
 use Tualo\Office\Basic\TualoApplication as App;
 use Tualo\Office\Basic\Route as BasicRoute;
 use Tualo\Office\Basic\IRoute;
-use Tualo\Office\MicrosoftMail\GraphHelper;
 use Microsoft\Graph\Generated\Models\User;
-use Tualo\Office\MicrosoftMail\API;
 use Tualo\Office\Mail\MailInterface;
+use Tualo\Office\MSGraph\API as MSGraphAPI;
+use Microsoft\Graph\Generated\Models;
+use Microsoft\Graph\Generated\Users\Item\SendMail\SendMailPostRequestBody;
+use Microsoft\Graph\Generated\Models\Message;
+use Microsoft\Graph\Generated\Models\ItemBody;
+use Microsoft\Graph\Generated\Models\BodyType;
+use Microsoft\Graph\Generated\Models\Recipient;
+use Microsoft\Graph\Generated\Models\EmailAddress;
+use Microsoft\Graph\Generated\Models\FileAttachment;
+use Microsoft\Kiota\Abstractions\ApiException;
+use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 
 
 
@@ -16,9 +25,7 @@ class MSGraphMail implements MailInterface
 {
     public static function get(): MSGraphMail
     {
-        GraphHelper::initializeGraphForUserAuth();
-        $config = json_decode(API::env('primary'), true);
-        GraphHelper::setAccessToken($config['access_token']);
+        MSGraphAPI::GraphClient();
         return new MSGraphMail();
     }
 
@@ -124,7 +131,7 @@ class MSGraphMail implements MailInterface
         }
         for ($i = 0; $i < count($this->recipients); $i++) {
 
-            GraphHelper::sendMail(
+            self::sendMail(
                 $this->Subject,
 
                 $alt,
@@ -139,6 +146,84 @@ class MSGraphMail implements MailInterface
             );
         }
         return true;
+    }
+
+    private static function sendMail(
+        string $subject,
+        string $bodyText,
+        string $bodyHtml,
+        string $recipient,
+        array $attachments = [],
+        string $listUnsubscribePost = ""
+    ): void {
+        try {
+            $graphClient = MSGraphAPI::GraphClient();
+            $requestBody = new SendMailPostRequestBody();
+            $message = new Message();
+            $message->setSubject($subject);
+            $message->setFrom(
+                (new Recipient())->setEmailAddress(
+                    (new EmailAddress())->setAddress(MSGraphAPI::env('mailFromAddress'))
+                )
+            );
+
+            if ($bodyText !== '') {
+                $messageBody = new ItemBody();
+                $messageBody->setContentType(new BodyType('text'));
+                $messageBody->setContent($bodyText);
+                $message->setBody($messageBody);
+            }
+
+            if ($bodyHtml !== '') {
+                $messageBody = new ItemBody();
+                $messageBody->setContentType(new BodyType('html'));
+                $messageBody->setContent($bodyHtml);
+                $message->setBody($messageBody);
+            }
+
+            $toRecipient = new Recipient();
+            $toRecipient->setEmailAddress((new EmailAddress())->setAddress($recipient));
+            $message->setToRecipients([$toRecipient]);
+
+            $attachmentsArray = [];
+            foreach ($attachments as $attachment) {
+                $fileAttachment = new FileAttachment();
+                if (isset($attachment['isInline'])) {
+                    $fileAttachment->setIsInline($attachment['isInline']);
+                }
+                $fileAttachment->setName($attachment['name']);
+                if (isset($attachment['contentType'])) {
+                    $fileAttachment->setContentType($attachment['contentType']);
+                }
+                if (isset($attachment['content'])) {
+                    $fileAttachment->setContentBytes(
+                        \GuzzleHttp\Psr7\Utils::streamFor(base64_encode($attachment['content']))
+                    );
+                }
+                $attachmentsArray[] = $fileAttachment;
+            }
+            if (count($attachmentsArray) > 0) {
+                $message->setAttachments($attachmentsArray);
+            }
+
+            if ($listUnsubscribePost !== '') {
+                $extendedProperty = new Models\SingleValueLegacyExtendedProperty();
+                $extendedProperty->setId('String 0x1045');
+                $extendedProperty->setValue($listUnsubscribePost);
+                $message->setSingleValueExtendedProperties([$extendedProperty]);
+            }
+
+            $requestBody->setMessage($message);
+            if (MSGraphAPI::has('defaultUserId')) {
+                $graphClient->users()->byUserId(MSGraphAPI::env('defaultUserId'))->sendMail()->post($requestBody)->wait();
+            } else {
+                $graphClient->me()->sendMail()->post($requestBody)->wait();
+            }
+        } catch (ODataError $exception) {
+            throw new \Exception($exception->getError()->getMessage());
+        } catch (ApiException $exception) {
+            throw new \Exception($exception->getMessage());
+        }
     }
 
 

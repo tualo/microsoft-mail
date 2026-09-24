@@ -7,7 +7,7 @@ use Tualo\Office\Basic\TualoApplication as App;
 use Tualo\Office\Basic\Route as BasicRoute;
 use Tualo\Office\Basic\IRoute;
 use Tualo\Office\DS\DSModel;
-use Tualo\Office\MicrosoftMail\GraphHelper;
+use Tualo\Office\MSGraph\API;
 
 
 class DeviceCode extends \Tualo\Office\Basic\RouteWrapper
@@ -17,9 +17,7 @@ class DeviceCode extends \Tualo\Office\Basic\RouteWrapper
     {
         BasicRoute::add('/microsoft-mail/setup/devicelogin', function ($matches) {
             try {
-                GraphHelper::initializeGraphForUserAuth();
-
-                $deviceCodeResponse = GraphHelper::getDeviceLogin();
+                $deviceCodeResponse = API::getDeviceCodeLogin();
                 App::result('verification_uri',  $deviceCodeResponse['verification_uri']);
                 App::result('device_code',  $deviceCodeResponse['device_code']);
                 App::result('user_code', $deviceCodeResponse['user_code']);

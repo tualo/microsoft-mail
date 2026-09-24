@@ -85,6 +85,7 @@ class API
         if (isset($env[$key])) {
             return $env[$key];
         }
+
         throw new \Exception('Environment ' . $key . ' not found!');
     }
 
