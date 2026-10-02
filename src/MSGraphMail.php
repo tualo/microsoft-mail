@@ -42,6 +42,10 @@ class MSGraphMail implements MailInterface
 
     public function addAddress(string $email, string $name = "")
     {
+        $email = trim($email);
+        if ($email === '') {
+            return false;
+        }
         $this->recipients[] = ['email' => $email, 'name' => $name];
         return true;
     }
